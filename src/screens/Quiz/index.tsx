@@ -26,6 +26,7 @@ import Animated, {
 import { ProgressBar } from "../../components/ProgressBar";
 import { THEME } from "../../styles/theme";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { OverlayFeedback } from "../../components/OverlayFeedback";
 
 interface Params {
   id: string;
@@ -37,6 +38,8 @@ const CARD_INCLINATION = 10;
 const CARD_SKIP_AREA = -100;
 
 export function Quiz() {
+  const [statusReply, setStatusReply] = useState(0);
+
   const [points, setPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -50,7 +53,15 @@ export function Quiz() {
   const cardPosition = useSharedValue(0);
 
   function shakeAnimation() {
-    shake.value = withSequence(withTiming(3), withTiming(0));
+    shake.value = withSequence(
+      withTiming(3),
+      withTiming(0, undefined, (finished) => {
+        "worklet";
+        if (finished) {
+          runOnJS(handleNextQuestion)();
+        }
+      })
+    );
   }
 
   const shakeStyleAnimate = useAnimatedStyle(() => {
@@ -116,12 +127,10 @@ export function Quiz() {
     if (quiz.questions[currentQuestion].correct === alternativeSelected) {
       setPoints((prevState) => prevState + 1);
       handleNextQuestion();
+      setStatusReply(1);
     } else {
+      setStatusReply(2);
       shakeAnimation();
-
-      setTimeout(() => {
-        handleNextQuestion();
-      }, 1100);
     }
 
     setAlternativeSelected(null);
@@ -222,6 +231,7 @@ export function Quiz() {
 
   return (
     <View style={styles.container}>
+      <OverlayFeedback status={statusReply} />
       <Animated.View style={fixedProgressBarStyle}>
         <Text style={styles.title}> {quiz.title} </Text>
         <ProgressBar
@@ -251,6 +261,7 @@ export function Quiz() {
               question={quiz.questions[currentQuestion]}
               alternativeSelected={alternativeSelected}
               setAlternativeSelected={setAlternativeSelected}
+              onUnmount={() => setStatusReply(0)}
             />
           </Animated.View>
         </GestureDetector>
