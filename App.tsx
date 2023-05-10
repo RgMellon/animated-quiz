@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { Routes } from "./src/routes";
 import { Loading } from "./src/components/Loading";
+import { Teste } from "./src/screens/Teste";
 
 export default function App() {
   const [fontsLoaded] = useFonts({ Roboto_400Regular, Roboto_700Bold });
@@ -24,7 +25,7 @@ export default function App() {
         backgroundColor="transparent"
         translucent
       />
-      <Routes />
+      <Teste />
     </GestureHandlerRootView>
   );
 }
